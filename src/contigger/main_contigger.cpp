@@ -219,8 +219,8 @@ int contigger_main(int argc, char** argv)
 					 outFolder + "/graph_final.gv");
 	outGen.outputFasta(extender.getUnbranchingPaths(),
 					   outFolder + "/graph_final.fasta");
-	outGen.outputGfa(extender.getUnbranchingPaths(),
-					 outFolder + "/graph_final.gfa");
+	outGen.outputGfaCompact(extender.getUnbranchingPaths(),
+					 		outFolder + "/graph_final.gfa");
 
 	Logger::get().debug() << "Peak RAM usage: " 
 		<< getPeakRSS() / 1024 / 1024 / 1024 << " Gb";
