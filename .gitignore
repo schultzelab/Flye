@@ -13,3 +13,4 @@ dist
 *.egg-info
 lib/minimap2/minimap2
 lib/minimap2/libminimap2.a
+.idea
