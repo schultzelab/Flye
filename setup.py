@@ -69,7 +69,7 @@ setup(name='flye',
       description='De novo assembler for single molecule sequencing reads using repeat graphs',
       url='https://github.com/fenderglass/Flye',
       author='Mikhail Kolmogorov',
-      author_email = 'fenderglass@gmail.com',
+      author_email='fenderglass@gmail.com',
       license='BSD-3-Clause',
       packages=['flye', 'flye/assembly', 'flye/config', 'flye/polishing',
                 'flye/utils', 'flye/repeat_graph', 'flye/short_plasmids',
@@ -77,5 +77,5 @@ setup(name='flye',
       package_data={'flye': ['config/bin_cfg/*', 'tests/data/*']},
       entry_points={'console_scripts': ['flye = flye.main:main']},
       cmdclass={'build': MakeBuild,
-                'install' : MakeInstall}
+                'install': MakeInstall}
       )
