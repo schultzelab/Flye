@@ -84,7 +84,7 @@ void SequenceContainer::loadFromFile(const std::string& fileName,
 	std::vector<FastaRecord> records;
 	if (this->isFasta(fileName))
 	{
-		this->readFasta(records, fileName);
+		this->readFasta_parallel(records, fileName);
 	}
 	else
 	{
@@ -226,7 +226,91 @@ size_t SequenceContainer::readFasta(std::vector<FastaRecord>& record,
 	return record.size();
 }
 
-size_t SequenceContainer::readFastq(std::vector<FastaRecord>& record, 
+size_t SequenceContainer::readFasta_parallel(std::vector<FastaRecord>& record,
+                                    const std::string& fileName)
+{
+    size_t BUF_SIZE = 32 * 1024 * 1024;
+    char* rawBuffer = new char[BUF_SIZE];
+    auto* fd = gzopen(fileName.c_str(), "rb");
+    if (!fd)
+    {
+        throw ParseException("Can't open reads file");
+    }
+
+    record.clear();
+    int lineNo = 1;
+    std::string header;
+    std::string sequence;
+    std::string nextLine;
+    try
+    {
+        while(!gzeof(fd))
+        {
+            //get a new line
+            for (;;)
+            {
+                char* read = gzgets(fd, rawBuffer, BUF_SIZE);
+                if (!read) break;
+                nextLine += read;
+                if (nextLine.empty()) break;
+                if (nextLine.back() == '\n')
+                {
+                    nextLine.pop_back();
+                    break;
+                }
+            }
+
+            if (nextLine.empty()) continue;
+            if (nextLine.back() == '\r') nextLine.pop_back();
+
+            if (nextLine[0] == '>')
+            {
+                if (!header.empty())
+                {
+                    if (sequence.empty()) throw ParseException("empty sequence");
+
+                    record.emplace_back(DnaSequence(sequence), header,
+                                        FastaRecord::ID_NONE);
+                    sequence.clear();
+                    header.clear();
+                }
+                this->validateHeader(nextLine);
+                header = nextLine;
+            }
+            else
+            {
+                this->validateSequence(nextLine);
+                std::copy(nextLine.begin(), nextLine.end(),
+                          std::back_inserter(sequence));
+            }
+
+            ++lineNo;
+            nextLine.clear();
+        }
+
+        if (sequence.empty()) throw ParseException("empty sequence");
+        if (header.empty())
+        {
+            throw ParseException("Fasta fromat error");
+        }
+        record.emplace_back(DnaSequence(sequence), header,
+                            FastaRecord::ID_NONE);
+
+    }
+    catch (ParseException& e)
+    {
+        std::stringstream ss;
+        ss << "parse error in " << fileName << " on line " << lineNo << ": " << e.what();
+        gzclose(fd);
+        throw ParseException(ss.str());
+    }
+
+    delete[] rawBuffer;
+    gzclose(fd);
+    return record.size();
+}
+
+size_t SequenceContainer::readFastq(std::vector<FastaRecord>& record,
 									const std::string& fileName)
 {
 

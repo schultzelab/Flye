@@ -247,7 +247,10 @@ private:
 	size_t readFasta(std::vector<FastaRecord>& record, 
 				     const std::string& fileName);
 
-	size_t readFastq(std::vector<FastaRecord>& record, 
+    size_t readFasta_parallel(std::vector<FastaRecord>& record,
+                              const std::string& fileName);
+
+	size_t readFastq(std::vector<FastaRecord>& record,
 				     const std::string& fileName);
 
 	bool   isFasta(const std::string& fileName);
