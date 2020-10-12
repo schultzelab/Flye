@@ -31,3 +31,5 @@ lib/samtools-1.9/htslib-1.9/config.mk
 lib/samtools-1.9/htslib-1.9/config.status
 lib/samtools-1.9/htslib-1.9/htslib.pc.tmp
 lib/samtools-1.9/htslib-1.9/htslib_static.mk
+
+.idea
