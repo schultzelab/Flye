@@ -7,20 +7,21 @@ ASSEMBLE_BIN := ${BIN_DIR}/flye-assemble
 REPEAT_BIN := ${BIN_DIR}/flye-repeat
 CONTIGGER_BIN := ${BIN_DIR}/flye-contigger
 POLISH_BIN := ${BIN_DIR}/flye-polish
+ASSEMBLE_UNIT_TESTS := ${BIN_DIR}/flye-assemble-unit-tests
 
 profile: CXXFLAGS += -pg
 profile: LDFLAGS += -pg
 profile: release
 
 release: CXXFLAGS += -O3 -DNDEBUG
-release: flye-repeat flye-polish flye-assemble flye-contigger
+release: flye-repeat flye-polish flye-assemble flye-contigger flye-assemble-unit-tests
 
 SANITIZE_FLAGS += -D_GLIBCXX_SANITIZE_VECTOR -U_FORTIFY_SOURCE -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined
 #SANITIZE_FLAGS += -fsanitize=thread -fsanitize=leak -fsanitize=undefined
 debug: CXXFLAGS += -Og ${SANITIZE_FLAGS}
 #debug: CXXFLAGS += -D_GLIBCXX_DEBUG
 debug: LDFLAGS += ${SANITIZE_FLAGS}
-debug: flye-repeat flye-polish flye-assemble flye-contigger
+debug: flye-repeat flye-polish flye-assemble flye-contigger flye-assemble-unit-tests
 
 
 #sequence module
@@ -68,6 +69,13 @@ flye-polish: ${polish_obj} bin/polisher.o
 polishing/%.o: polishing/%.cpp bin/polisher.cpp polishing/*.h common/*h
 	${CXX} -c ${CXXFLAGS} $< -o $@
 
+#unit tests
+unit_tests_obj := ${patsubst %.cpp,%.o,${wildcard unit_tests/*.cpp}}
+flye-assemble-unit-tests: ${unit_tests_obj}
+	${CXX} ${unit_tests_obj} -o ${ASSEMBLE_UNIT_TESTS} ${LDFLAGS}
+
+unit_tests/%.o: unit_tests/%.cpp sequence/*.h
+	${CXX} -c -Isequence ${CXXFLAGS} $< -o $@
 
 
 clean:
@@ -76,8 +84,10 @@ clean:
 	-rm ${assemble_obj}
 	-rm ${polish_obj}
 	-rm ${contigger_obj}
+	-rm ${unit_tests_obj}
 	-rm ${patsubst %.cpp,%.o,${wildcard bin/*.cpp}}
 	-rm ${REPEAT_BIN}
 	-rm ${ASSEMBLE_BIN}
 	-rm ${POLISH_BIN}
 	-rm ${CONTIGGER_BIN}
+	-rm ${ASSEMBLE_UNIT_TESTS}
