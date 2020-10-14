@@ -70,7 +70,7 @@ polishing/%.o: polishing/%.cpp bin/polisher.cpp polishing/*.h common/*h
 	${CXX} -c ${CXXFLAGS} $< -o $@
 
 #unit tests
-unit_tests_obj := ${patsubst %.cpp,%.o,${wildcard unit_tests/*.cpp}}
+unit_tests_obj := ${patsubst %.cpp, %.o, ${wildcard unit_tests/*.cpp} ${wildcard sequence/*.cpp}}
 flye-assemble-unit-tests: ${unit_tests_obj}
 	${CXX} ${unit_tests_obj} -o ${ASSEMBLE_UNIT_TESTS} ${LDFLAGS}
 
