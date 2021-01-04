@@ -4,9 +4,17 @@
 #include "sequence_container.h"
 
 static auto data = std::string(std::getenv("TestData"));
-TEST_CASE("Read header info") {
-    SequenceContainer container;
-    container.loadFromFile(data + "/header-only.fasta", 0);
+TEST_CASE("loadFromFile: 1Record.1Thread") {
 
-    CHECK(&container != nullptr);
+    const auto fileName = data + "/1Record.fasta";
+    const size_t minRecordLength = 0;
+    SequenceContainer sc_expected{};
+    sc_expected.loadFromFile(fileName, minRecordLength);
+
+    const bool runParallel = true;
+    const size_t threads = 1;
+    SequenceContainer sc{};
+    sc.loadFromFile(fileName, minRecordLength, runParallel, threads);
+
+    REQUIRE(sc.iterSeqs().size() == sc_expected.iterSeqs().size());
 }

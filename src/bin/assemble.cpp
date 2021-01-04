@@ -165,7 +165,7 @@ int main(int argc, char** argv)
 	{
 		for (auto& readsFile : readsList)
 		{
-			readsContainer.loadFromFile(readsFile, minReadLength);
+			readsContainer.loadFromFile(readsFile, minReadLength, numThreads);
 		}
 	}
 	catch (SequenceContainer::ParseException& e)

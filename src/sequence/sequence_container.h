@@ -149,7 +149,7 @@ public:
 	SequenceContainer():
 		_offsetInitialized(false) {}
 
-	void loadFromFile(const std::string& filename, int minReadLength = 0);
+	void loadFromFile(const std::string& filename, int minReadLength = 0, bool runParallel = false, size_t threads = 1);
 
 	static void writeFasta(const std::vector<FastaRecord>& records,
 						   const std::string& fileName,
@@ -248,7 +248,8 @@ private:
 				     const std::string& fileName);
 
     size_t readFasta_parallel(std::vector<FastaRecord>& record,
-                              const std::string& fileName);
+                              const std::string& fileName,
+                              const size_t threads);
 
 	size_t readFastq(std::vector<FastaRecord>& record,
 				     const std::string& fileName);

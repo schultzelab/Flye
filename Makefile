@@ -6,8 +6,11 @@ export LEMON = -I${ROOT_DIR}/lib/lemon
 export BIN_DIR = ${ROOT_DIR}/bin
 export MINIMAP2_DIR = ${ROOT_DIR}/lib/minimap2
 
-export CXXFLAGS += ${LIBCUCKOO} ${INTERVAL_TREE} ${LEMON} -I${MINIMAP2_DIR}
-export LDFLAGS += -lz -L${MINIMAP2_DIR} -lminimap2
+export TBB_LIB = ${TBB_LIB_DIR}
+export MDC_GECO_LIB = ${MDC_GECO_LIB_DIR}
+
+export CXXFLAGS += ${LIBCUCKOO} ${INTERVAL_TREE} ${LEMON} -I${MINIMAP2_DIR} -I${TBB_INCLUDE_DIR} -I${MDC_GECO_INCLUDE_DIR}
+export LDFLAGS += -lz -L${MINIMAP2_DIR} -lminimap2 -L${TBB_LIB} -ltbb -L${MDC_GECO_LIB} -lmdc-geco
 
 .PHONY: clean all profile debug minimap2
 

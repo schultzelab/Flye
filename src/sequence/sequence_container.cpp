@@ -9,9 +9,12 @@
 #include <random>
 #include <algorithm>
 #include <zlib.h>
+#include <tbb/tbb.h>
+#include <fasta-view.hxx>
 
 #include "sequence_container.h"
 #include "../common/logger.h"
+
 
 size_t SequenceContainer::g_nextSeqId = 0;
 
@@ -79,29 +82,32 @@ FastaRecord::Id SequenceContainer::addSequence(const FastaRecord& seqRec)
 }
 
 void SequenceContainer::loadFromFile(const std::string& fileName, 
-									 int minReadLength)
+									 int minReadLength,
+									 bool useParallel, size_t threads)
 {
 	std::vector<FastaRecord> records;
 	if (this->isFasta(fileName))
 	{
-		this->readFasta_parallel(records, fileName);
+	    if(useParallel){
+	        this->readFasta_parallel(records, fileName, threads);
+	    } else {
+            this->readFasta(records, fileName);
+        }
 	}
 	else
 	{
 		this->readFastq(records, fileName);
 	}
-	
-	//shuffling input reads
-	//std::vector<size_t> indicesPerm(records.size());
-	//for (size_t i = 0; i < indicesPerm.size(); ++i) indicesPerm[i] = i;
-	//std::random_shuffle(indicesPerm.begin(), indicesPerm.end());
 
-	//for (size_t i : indicesPerm)
+	Logger::get().info() << "records: " << records.size();
 	for (size_t i = 0; i < records.size(); ++i)
 	{
 		if (records[i].sequence.length() > (size_t)minReadLength)
 		{
+		    Logger::get().info() << i << ": " << records[i].description;
 			this->addSequence(records[i]);
+            Logger::get().info() << "sequence[" << (i*2) << "]: " << _seqIndex[(i*2)].id;
+            Logger::get().info() << "sequence[" << (i*2 + 1) << "]: " << _seqIndex[(i*2 + 1)].id;
 		}
 	}
 }
@@ -226,88 +232,16 @@ size_t SequenceContainer::readFasta(std::vector<FastaRecord>& record,
 	return record.size();
 }
 
-size_t SequenceContainer::readFasta_parallel(std::vector<FastaRecord>& record,
-                                    const std::string& fileName)
+size_t SequenceContainer::readFasta_parallel(std::vector<FastaRecord>& records,
+                                    const std::string& fileName, const size_t threads)
 {
-    size_t BUF_SIZE = 32 * 1024 * 1024;
-    char* rawBuffer = new char[BUF_SIZE];
-    auto* fd = gzopen(fileName.c_str(), "rb");
-    if (!fd)
-    {
-        throw ParseException("Can't open reads file");
-    }
+    Logger::get().info() << "GECO::View Reading sequences";
+    geco::fasta::View view{threads};
+    const auto n_records = view.read(fileName);
+    records.resize(n_records);
 
-    record.clear();
-    int lineNo = 1;
-    std::string header;
-    std::string sequence;
-    std::string nextLine;
-    try
-    {
-        while(!gzeof(fd))
-        {
-            //get a new line
-            for (;;)
-            {
-                char* read = gzgets(fd, rawBuffer, BUF_SIZE);
-                if (!read) break;
-                nextLine += read;
-                if (nextLine.empty()) break;
-                if (nextLine.back() == '\n')
-                {
-                    nextLine.pop_back();
-                    break;
-                }
-            }
-
-            if (nextLine.empty()) continue;
-            if (nextLine.back() == '\r') nextLine.pop_back();
-
-            if (nextLine[0] == '>')
-            {
-                if (!header.empty())
-                {
-                    if (sequence.empty()) throw ParseException("empty sequence");
-
-                    record.emplace_back(DnaSequence(sequence), header,
-                                        FastaRecord::ID_NONE);
-                    sequence.clear();
-                    header.clear();
-                }
-                this->validateHeader(nextLine);
-                header = nextLine;
-            }
-            else
-            {
-                this->validateSequence(nextLine);
-                std::copy(nextLine.begin(), nextLine.end(),
-                          std::back_inserter(sequence));
-            }
-
-            ++lineNo;
-            nextLine.clear();
-        }
-
-        if (sequence.empty()) throw ParseException("empty sequence");
-        if (header.empty())
-        {
-            throw ParseException("Fasta fromat error");
-        }
-        record.emplace_back(DnaSequence(sequence), header,
-                            FastaRecord::ID_NONE);
-
-    }
-    catch (ParseException& e)
-    {
-        std::stringstream ss;
-        ss << "parse error in " << fileName << " on line " << lineNo << ": " << e.what();
-        gzclose(fd);
-        throw ParseException(ss.str());
-    }
-
-    delete[] rawBuffer;
-    gzclose(fd);
-    return record.size();
+    Logger::get().info() << "GECO::View: Done";
+    return records.size();
 }
 
 size_t SequenceContainer::readFastq(std::vector<FastaRecord>& record,
