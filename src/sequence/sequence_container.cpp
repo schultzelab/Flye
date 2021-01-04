@@ -99,15 +99,15 @@ void SequenceContainer::loadFromFile(const std::string& fileName,
 		this->readFastq(records, fileName);
 	}
 
-	Logger::get().info() << "records: " << records.size();
+	//Logger::get().info() << "records: " << records.size();
 	for (size_t i = 0; i < records.size(); ++i)
 	{
 		if (records[i].sequence.length() > (size_t)minReadLength)
 		{
-		    Logger::get().info() << i << ": " << records[i].description;
+		    //Logger::get().info() << i << ": " << records[i].description;
 			this->addSequence(records[i]);
-            Logger::get().info() << "sequence[" << (i*2) << "]: " << _seqIndex[(i*2)].id;
-            Logger::get().info() << "sequence[" << (i*2 + 1) << "]: " << _seqIndex[(i*2 + 1)].id;
+            //Logger::get().info() << "sequence[" << (i*2) << "]: " << _seqIndex[(i*2)].id;
+            //Logger::get().info() << "sequence[" << (i*2 + 1) << "]: " << _seqIndex[(i*2 + 1)].id;
 		}
 	}
 }
@@ -235,11 +235,18 @@ size_t SequenceContainer::readFasta(std::vector<FastaRecord>& record,
 size_t SequenceContainer::readFasta_parallel(std::vector<FastaRecord>& records,
                                     const std::string& fileName, const size_t threads)
 {
-    Logger::get().info() << "GECO::View Reading sequences";
+    Logger::get().info() << "GECO::View: Reading sequences";
     geco::fasta::View view{threads};
-    const auto n_records = view.read(fileName);
+    const auto n_records = static_cast<int>(view.read(fileName));
     records.resize(n_records);
 
+    const auto update_record = [&](int i){
+        auto sequence = view.records()[i].sequence();
+        auto header = view.records()[i].header();
+        records[i] = FastaRecord(DnaSequence(std::move(sequence)), std::move(header), FastaRecord::ID_NONE);
+    };
+
+    tbb::parallel_for(0, n_records, 1, update_record);
     Logger::get().info() << "GECO::View: Done";
     return records.size();
 }
