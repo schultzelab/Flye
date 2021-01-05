@@ -114,7 +114,7 @@ class JobAssembly(Job):
         if not os.path.isdir(self.assembly_dir):
             os.mkdir(self.assembly_dir)
         asm.assemble(self.args, Job.run_params, self.assembly_filename,
-                     self.log_file, self.args.asm_config, )
+                     self.log_file, self.args.asm_config)
         if os.path.getsize(self.assembly_filename) == 0:
             raise asm.AssembleException("No disjointigs were assembled - "
                                         "please check if the read type and genome "
@@ -679,6 +679,9 @@ def main():
     parser.add_argument("-t", "--threads", dest="threads",
                         type=lambda v: check_int_range(v, 1, 1024),
                         default=1, metavar="int", help="number of parallel threads [1]")
+    parser.add_argument("-w", "--work-unit-bytes", dest="work_unit_bytes",
+                        type=lambda v: check_int_range(v, 1, 33554432),
+                        default=11008, metavar="int", help="work unit for parallel process [11008 bytes]"),
     parser.add_argument("-i", "--iterations", dest="num_iters",
                         type=lambda v: check_int_range(v, 0, 10),
                         default=1, help="number of polishing iterations [1]",

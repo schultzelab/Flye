@@ -42,7 +42,7 @@ def assemble(args, run_params, out_file, log_file, config_path):
     logger.debug("-----Begin assembly log------")
     cmdline = [ASSEMBLE_BIN, "--reads", ",".join(args.reads), "--out-asm", out_file,
                "--genome-size", str(args.genome_size), "--config", config_path,
-               "--log", log_file, "--threads", str(args.threads)]
+               "--log", log_file, "--threads", str(args.threads), "--work-unit-bytes", str(args.work_unit_bytes)]
     if args.debug:
         cmdline.append("--debug")
     if args.meta:

@@ -83,13 +83,15 @@ FastaRecord::Id SequenceContainer::addSequence(const FastaRecord& seqRec)
 
 void SequenceContainer::loadFromFile(const std::string& fileName, 
 									 int minReadLength,
-									 bool useParallel, size_t threads)
+									 bool runParallel,
+									 const size_t threads,
+									 const size_t work_unit_bytes)
 {
 	std::vector<FastaRecord> records;
 	if (this->isFasta(fileName))
 	{
-	    if(useParallel){
-	        this->readFasta_parallel(records, fileName, threads);
+	    if(runParallel){
+	        this->readFasta_parallel(records, fileName, threads, work_unit_bytes);
 	    } else {
             this->readFasta(records, fileName);
         }
@@ -233,10 +235,13 @@ size_t SequenceContainer::readFasta(std::vector<FastaRecord>& record,
 }
 
 size_t SequenceContainer::readFasta_parallel(std::vector<FastaRecord>& records,
-                                    const std::string& fileName, const size_t threads)
+                                    const std::string& fileName,
+                                    const size_t threads,
+                                    const size_t work_unit_bytes)
 {
     Logger::get().info() << "GECO::View: Reading sequences";
-    geco::fasta::View view{threads};
+    Logger::get().info() << "GECO::View: Work unit = " << work_unit_bytes << " bytes";
+    geco::fasta::View view{threads, work_unit_bytes};
     const auto n_records = static_cast<int>(view.read(fileName));
     records.resize(n_records);
 

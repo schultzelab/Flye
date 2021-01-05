@@ -25,7 +25,7 @@
 bool parseArgs(int argc, char** argv, std::string& readsFasta, 
 			   std::string& outAssembly, std::string& logFile, size_t& genomeSize,
 			   int& kmerSize, bool& debug, size_t& numThreads, int& minOverlap, 
-			   std::string& configPath, int& minReadLength, bool& unevenCov)
+			   std::string& configPath, int& minReadLength, bool& unevenCov, size_t& work_unit_bytes)
 {
 	auto printUsage = [argv]()
 	{
@@ -49,7 +49,9 @@ bool parseArgs(int argc, char** argv, std::string& readsFasta,
 				  << "  --log log_file\toutput log to file "
 				  << "[default = not set] \n"
 				  << "  --threads num_threads\tnumber of parallel threads "
-				  << "[default = 1] \n";
+				  << "[default = 1] \n"
+				  << "  --work-unit-bytes maximum size of work unit\t"
+                  << "[default = 11008 bytes] \n";
 	};
 	
 	int optionIndex = 0;
@@ -62,6 +64,7 @@ bool parseArgs(int argc, char** argv, std::string& readsFasta,
 		{"min-read", required_argument, 0, 0},
 		{"log", required_argument, 0, 0},
 		{"threads", required_argument, 0, 0},
+        {"work-unit-bytes", required_argument, 0, 0},
 		{"kmer", required_argument, 0, 0},
 		{"min-ovlp", required_argument, 0, 0},
 		{"meta", no_argument, 0, 0},
@@ -81,6 +84,8 @@ bool parseArgs(int argc, char** argv, std::string& readsFasta,
 				minReadLength = atoi(optarg);
 			else if (!strcmp(longOptions[optionIndex].name, "threads"))
 				numThreads = atoi(optarg);
+            else if (!strcmp(longOptions[optionIndex].name, "work-unit-bytes"))
+                work_unit_bytes = atoi(optarg);
 			else if (!strcmp(longOptions[optionIndex].name, "min-ovlp"))
 				minOverlap = atoi(optarg);
 			else if (!strcmp(longOptions[optionIndex].name, "log"))
@@ -128,6 +133,7 @@ int main(int argc, char** argv)
 	bool debugging = false;
 	bool unevenCov = false;
 	size_t numThreads = 1;
+	size_t work_unit_bytes = 11008;
 	std::string readsFasta;
 	std::string outAssembly;
 	std::string logFile;
@@ -135,7 +141,7 @@ int main(int argc, char** argv)
 
 	if (!parseArgs(argc, argv, readsFasta, outAssembly, logFile, genomeSize,
 				   kmerSize, debugging, numThreads, minOverlap, configPath, 
-				   minReadLength, unevenCov)) return 1;
+				   minReadLength, unevenCov, work_unit_bytes)) return 1;
 
 	Logger::get().setDebugging(debugging);
 	if (!logFile.empty()) Logger::get().setOutputFile(logFile);
@@ -166,7 +172,7 @@ int main(int argc, char** argv)
 		for (auto& readsFile : readsList)
 		{
 		    bool runParallel = true;
-			readsContainer.loadFromFile(readsFile, minReadLength, runParallel, numThreads);
+			readsContainer.loadFromFile(readsFile, minReadLength, runParallel, numThreads, work_unit_bytes);
 		}
 	}
 	catch (SequenceContainer::ParseException& e)

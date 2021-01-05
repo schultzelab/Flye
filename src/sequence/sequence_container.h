@@ -149,7 +149,11 @@ public:
 	SequenceContainer():
 		_offsetInitialized(false) {}
 
-	void loadFromFile(const std::string& filename, int minReadLength = 0, bool runParallel = false, size_t threads = 1);
+	void loadFromFile(const std::string& filename,
+                   int minReadLength = 0,
+                   bool runParallel = false,
+                   const size_t threads = 1,
+                   const size_t work_unit_bytes = 11008); // 64 * (172 catch lines).
 
 	static void writeFasta(const std::vector<FastaRecord>& records,
 						   const std::string& fileName,
@@ -249,7 +253,8 @@ private:
 
     size_t readFasta_parallel(std::vector<FastaRecord>& record,
                               const std::string& fileName,
-                              const size_t threads);
+                              const size_t threads,
+                              const size_t work_unit_bytes);
 
 	size_t readFastq(std::vector<FastaRecord>& record,
 				     const std::string& fileName);
