@@ -246,8 +246,8 @@ size_t SequenceContainer::readFasta_parallel(std::vector<FastaRecord>& records,
     records.resize(n_records);
 
     const auto update_record = [&](int i){
-        auto sequence = view.records()[i].sequence();
-        auto header = view.records()[i].header();
+        auto sequence = view.records()[i].sequence;
+        auto header = view.records()[i].header;
         records[i] = FastaRecord(DnaSequence(std::move(sequence)), std::move(header), FastaRecord::ID_NONE);
     };
 
